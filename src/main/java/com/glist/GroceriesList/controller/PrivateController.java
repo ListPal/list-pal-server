@@ -1,6 +1,6 @@
 package com.glist.GroceriesList.controller;
 
-import com.glist.GroceriesList.Utils.Utils;
+import com.glist.GroceriesList.utils.Utils;
 import com.glist.GroceriesList.model.groceries.GroceryListItem;
 import com.glist.GroceriesList.model.groceries.GroceryListRole;
 import com.glist.GroceriesList.model.request.*;
@@ -37,6 +37,10 @@ public class PrivateController {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());
             return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -56,13 +60,17 @@ public class PrivateController {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());
             return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
     }
 
     // CREATE A LIST
     @PostMapping(value = "/create-list", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Response> createList(@RequestBody CreateListApiRequestBody body, @CookieValue("auth-jwt") String authCookie) throws Exception {
+    public ResponseEntity<Response> createList(@RequestBody CreateListApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
         try {
             // Validate input
             Utils.validateInput(body.containerId);
@@ -76,12 +84,16 @@ public class PrivateController {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());
             return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     // CREATE A LIST ITEM
     @PostMapping(value = "/create-list-item", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Response> createGroceryListItem(@RequestBody CreateListItemApiRequestBody body, @CookieValue("auth-jwt") String authCookie) throws Exception {
+    public ResponseEntity<Response> createGroceryListItem(@RequestBody CreateListItemApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
         try {
             // Validate input
             Utils.validateInput(body.containerId);
@@ -102,12 +114,16 @@ public class PrivateController {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());
             return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     // UPDATE A LIST ITEM
     @PostMapping(value = "/update-list-item", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Response> updateListItem(@RequestBody UpdateListItemApiRequestBody body, @CookieValue("auth-jwt") String authCookie) throws Exception {
+    public ResponseEntity<Response> updateListItem(@RequestBody UpdateListItemApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
         try {
             // Validate input
             Utils.validateInput(body.id);
@@ -135,12 +151,16 @@ public class PrivateController {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());
             return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     // CHECK ITEM LIST
     @PostMapping(value = "/check-list-items", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Response> checkItems(@RequestBody CheckItemsApiRequestBody body, @CookieValue("auth-jwt") String authCookie) throws Exception {
+    public ResponseEntity<Response> checkItems(@RequestBody CheckItemsApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
         try {
             // Validate input
             if (body.itemIds.isEmpty()) return ResponseEntity.ok(new Response(200, "No need to check items"));
@@ -153,12 +173,16 @@ public class PrivateController {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());
             return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     // UPDATE LIST NAME
     @PostMapping(value = "/update-list-name", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Response> updateListName(@RequestBody UpdateLisNameApiRequestBody body, @CookieValue("auth-jwt") String authCookie) throws Exception {
+    public ResponseEntity<Response> updateListName(@RequestBody UpdateLisNameApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
         try {
             // Validate input
             Utils.validateInput(body.containerId);
@@ -171,12 +195,16 @@ public class PrivateController {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());
             return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     // DELETE A LIST
     @DeleteMapping(value = "/delete-list", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<Response> deleteList(@RequestBody GetListApiRequestBody body, @CookieValue("auth-jwt") String authCookie) throws Exception {
+    public ResponseEntity<Response> deleteList(@RequestBody GetListApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
         try {
             // Validate input
             Utils.validateInput(body.containerId);
@@ -188,12 +216,16 @@ public class PrivateController {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());
             return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     // DELETE A LIST ITEM
     @DeleteMapping(value = "/delete-list-item", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<Response> deleteListItem(@RequestBody DeleteItemApiRequestBody body, @CookieValue("auth-jwt") String authCookie) throws Exception {
+    public ResponseEntity<Response> deleteListItem(@RequestBody DeleteItemApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
         try {
             // Validate input
             Utils.validateInput(body.containerId);
@@ -206,6 +238,10 @@ public class PrivateController {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());
             return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

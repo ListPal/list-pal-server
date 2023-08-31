@@ -13,7 +13,5 @@ public class ListPalConfig {
     private String serverDomain;
     private String clientEngine1;
     private String clientEngine2;
-    private String devDomain1;
-    private String devDomain2;
     private String secret;
 }

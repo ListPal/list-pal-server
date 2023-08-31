@@ -6,6 +6,7 @@ import com.glist.GroceriesList.model.response.Response;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -15,15 +16,10 @@ import java.util.Set;
 
 @Slf4j
 @Repository
+@RequiredArgsConstructor
 public class GroceryListRepo {
     private final ListDbRepository listDbRepository;
     private final ContainerDbRepository containerDbRepository;
-
-    @Autowired
-    public GroceryListRepo(ListDbRepository listDbRepository, ContainerDbRepository containerDbRepository) {
-        this.containerDbRepository = containerDbRepository;
-        this.listDbRepository = listDbRepository;
-    }
 
     public Response createList(String containerId, String listName, String scope) throws Exception {
         // Fetch container from database

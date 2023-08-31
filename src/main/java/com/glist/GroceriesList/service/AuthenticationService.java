@@ -8,6 +8,8 @@ import com.glist.GroceriesList.repository.ContainerDbRepository;
 import com.glist.GroceriesList.repository.UserRepo;
 import com.mongodb.MongoWriteException;
 import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,7 +23,7 @@ import java.util.Date;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthenticationService {
-    private final ContainerDbRepository containerDbRepository;
+    private final CookieService cookieService;
     private final JwtService jwtService;
     private final UserRepo userRepo;
 
@@ -48,7 +50,7 @@ public class AuthenticationService {
         return userRepo.getUserInfoFromToken(token);
     }
 
-    // TODO: Needs implementing
+    //TODO: Needs implementing
     public Boolean refreshToken(String token) throws Exception {
         if (token == null) throw new AccessDeniedException("No token found.");
         Date expirationDate = jwtService.extractClaim(token, Claims::getExpiration);
@@ -57,5 +59,10 @@ public class AuthenticationService {
         Duration duration = Duration.between(instantToCheck, currentInstant);
         // refresh if within 24hrs
         return duration.toHours() <= 24;
+    }
+
+    public Cookie logout(String token) {
+        // TODO: Expire token
+        return cookieService.deleteAuthCookie();
     }
 }

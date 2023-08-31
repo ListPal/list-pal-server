@@ -50,27 +50,24 @@ public class AuthenticationController {
         return ResponseEntity.ok(res);
     }
 
-    @PostMapping("/logout") // TODO expire token also
-    public ResponseEntity<Response> authenticate(HttpServletResponse response) throws AccessDeniedException {
+    @PostMapping("/logout")
+    public ResponseEntity<Response> authenticate(HttpServletResponse response, @CookieValue("auth-jwt") String token) throws AccessDeniedException {
         // Save null in browser cookie
-        Cookie jwtCookie = cookieService.deleteAuthCookie();
+        Cookie logoutCookie = authenticationService.logout(token);
         // Send empty cookie in response header
-        response.addCookie(jwtCookie);
+        response.addCookie(logoutCookie);
         return ResponseEntity.ok(new Response(200, "logged out"));
     }
 
     @PostMapping("/check-login-status")
-    public ResponseEntity<Object> checkLoginStatus(@CookieValue(value = "auth-jwt", required = false) String cookie, HttpServletResponse response) throws Exception {
+    public ResponseEntity<Object> checkLoginStatus(@CookieValue(value = "auth-jwt") String cookie, HttpServletResponse response) throws Exception {
         try {
-            if (cookie == null) {
-                return ResponseEntity.ok(new Response(403, "You don't have access to this resource"));
-            }
             UserAuthenticationResponse res = authenticationService.checkAuthentication(cookie);
             return ResponseEntity.ok(res);
         } catch (ExpiredJwtException e) {
             Response res = new Response(403, "Access Denied");
-            Cookie deleteCookie = cookieService.deleteAuthCookie();
-            response.addCookie(deleteCookie);
+            Cookie logoutCookie = cookieService.deleteAuthCookie();
+            response.addCookie(logoutCookie);
             return ResponseEntity.ok(res);
         }
     }

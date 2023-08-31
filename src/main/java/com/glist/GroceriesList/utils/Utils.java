@@ -1,6 +1,4 @@
-package com.glist.GroceriesList.Utils;
-
-import java.util.Set;
+package com.glist.GroceriesList.utils;
 
 public class Utils {
     public static void validateInput(String input) {
