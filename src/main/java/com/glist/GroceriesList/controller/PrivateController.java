@@ -27,7 +27,7 @@ public class PrivateController {
     @GetMapping("/get-lists")
     public ResponseEntity<Response> getLists(@RequestParam String containerId, @CookieValue("auth-jwt") String authCookie) throws Exception {
         try {
-            /// Validate input
+            // Validate input
             Utils.validateInput(containerId);
             // Ensure authorized subject for the requested asset
             authenticationService.ensureAuthorizedSubject(authCookie, containerId);

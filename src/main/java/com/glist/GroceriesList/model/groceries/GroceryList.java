@@ -32,7 +32,7 @@ public class GroceryList {
     private Set<GroceryListItem> groceryListItems;
 
     public GroceryList(String listName, String containerId) {
-        this.id = containerId + listName + System.currentTimeMillis();
+        this.id = containerId + listName.trim() + System.currentTimeMillis();
         this.containerId = containerId;
         this.listName = listName;
         this.groceryListItems = new HashSet<>();

@@ -9,9 +9,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "list-pal")
 public class ListPalConfig {
+    private String env;
     private String clientEngine;
     private String serverDomain;
-    private String clientEngine1;
-    private String clientEngine2;
     private String secret;
 }

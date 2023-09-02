@@ -25,7 +25,7 @@ public class GroceryListItem {
     // constructors
     public GroceryListItem(String listId, String name, int quantity, CollapsedUser user) {
         this.listId = listId;
-        this.id = listId + name + System.currentTimeMillis();
+        this.id = listId + System.currentTimeMillis();
         this.name = name;
         this.category = "Misc";
         this.quantity = quantity;

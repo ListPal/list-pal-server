@@ -41,7 +41,6 @@ public class AuthenticationController {
 
     @PostMapping("/authenticate")
     public ResponseEntity<UserAuthenticationResponse> authenticate(HttpServletRequest request, HttpServletResponse response, @RequestBody AuthenticationRequest body) throws AccessDeniedException {
-        log.info("HOST: " + request.getHeader("Host"));
         UserAuthenticationResponse res = authenticationService.authenticate(body);
         // Save jwt in browser cookie
         Cookie jwtCookie = cookieService.makeAuthCookie(res.getToken());
@@ -51,7 +50,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Response> authenticate(HttpServletResponse response, @CookieValue("auth-jwt") String token) throws AccessDeniedException {
+    public ResponseEntity<Response> authenticate(HttpServletResponse response, @CookieValue(value = "auth-jwt", required = false) String token) throws AccessDeniedException {
         // Save null in browser cookie
         Cookie logoutCookie = authenticationService.logout(token);
         // Send empty cookie in response header

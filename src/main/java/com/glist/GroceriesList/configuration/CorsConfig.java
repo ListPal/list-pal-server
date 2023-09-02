@@ -14,7 +14,7 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins(listPalConfig.getClientEngine1(), listPalConfig.getClientEngine2(), listPalConfig.getClientEngine())
+                .allowedOrigins(listPalConfig.getClientEngine())
                 .allowedMethods("GET", "POST", "DELETE")
                 .allowCredentials(true)
                 .maxAge(3600)
