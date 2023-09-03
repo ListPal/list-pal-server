@@ -82,4 +82,9 @@ public class AuthenticationController {
         listpalEmailService.sendForgotPasswordLink("kate.anderson0608@gmail.com");
         return ResponseEntity.ok("Successfully sent email");
     }
+
+    @PostMapping("/password-reset")
+    public ResponseEntity<String> resetPassword(@RequestBody String token, @RequestBody String password) {
+        return ResponseEntity.ok("Password successfully changed.");
+    }
 }

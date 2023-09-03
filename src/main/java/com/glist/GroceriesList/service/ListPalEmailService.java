@@ -16,7 +16,7 @@ public class ListPalEmailService {
         message.setFrom("noreply@listpalsecurity.com");
         message.setTo(to);
         message.setSubject("Reset Password");
-        message.setText("Follow this link " + "https://listpal.katespracticespace.com/#/reset-password?token=your-unique-token-here" + " to reset your password.");
+        message.setText("Follow this link " + "https://listpal.katespracticespace.com/#/password-reset?token=your-unique-token-here" + " to reset your password.");
         javaMailSender.send(message);
     }
 }
