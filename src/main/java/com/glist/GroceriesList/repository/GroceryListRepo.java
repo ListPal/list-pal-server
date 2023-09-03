@@ -4,11 +4,9 @@ import com.glist.GroceriesList.model.groceries.*;
 import com.glist.GroceriesList.model.response.Response;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -160,7 +158,7 @@ public class GroceryListRepo {
         }
     }
 
-    public Response updateListName(String containerId, String listId, String listName) throws Exception {
+    public Response updateList(String containerId, String listId, String listName, GroceryListRole scope) throws Exception {
         // Get list
         GroceryList list = listDbRepository.findListByIdExpanded(listId);
         GroceryListContainer container = containerDbRepository.findContainerByIdCollapsed(containerId);
@@ -171,9 +169,11 @@ public class GroceryListRepo {
             return new Response(400, "No list was found that matches container id: " + containerId);
         } else {
             list.setListName(listName);
+            list.setScope(scope);
             container.deleteCollapsedListById(listId);
             container.getCollapsedLists().add(CollapsedList.builder()
                     .listName(listName)
+                    .scope(scope)
                     .id(collapsedList.getId())
                     .people(collapsedList.getPeople())
                     .build());

@@ -181,16 +181,17 @@ public class PrivateController {
     }
 
     // UPDATE LIST NAME
-    @PostMapping(value = "/update-list-name", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PostMapping(value = "/update-list", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Response> updateListName(@RequestBody UpdateLisNameApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
         try {
             // Validate input
             Utils.validateInput(body.containerId);
             Utils.validateInput(body.listId);
             Utils.validateInput(body.listName);
+            Utils.validateInput(body.scope.name());
             // Ensure authorized subject for the requested asset
             authenticationService.ensureAuthorizedSubject(authCookie, body.containerId);
-            return ResponseEntity.ok(groceryListService.updateListName(body.containerId, body.listId, body.listName));
+            return ResponseEntity.ok(groceryListService.updateList(body.containerId, body.listId, body.listName, body.scope));
         } catch (IllegalArgumentException e) {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());

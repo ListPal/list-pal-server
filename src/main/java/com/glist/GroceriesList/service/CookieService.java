@@ -22,7 +22,6 @@ public class CookieService {
         jwtCookie.setHttpOnly(true);
         jwtCookie.setDomain(listPalConfig.getServerDomain());
         jwtCookie.setSecure(true);
-        jwtCookie.setAttribute("SameSite", "None");
         return jwtCookie;
     }
 
@@ -33,7 +32,6 @@ public class CookieService {
         jwtCookie.setHttpOnly(true);
         jwtCookie.setDomain(listPalConfig.getServerDomain());
         jwtCookie.setSecure(true);
-        jwtCookie.setAttribute("SameSite", "None");
         return jwtCookie;
     }
 }

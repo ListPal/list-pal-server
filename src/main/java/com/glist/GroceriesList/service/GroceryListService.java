@@ -1,12 +1,11 @@
 package com.glist.GroceriesList.service;
 
 import com.glist.GroceriesList.model.groceries.GroceryListItem;
+import com.glist.GroceriesList.model.groceries.GroceryListRole;
 import com.glist.GroceriesList.model.response.Response;
 import com.glist.GroceriesList.repository.GroceryListRepo;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -53,7 +52,7 @@ public class GroceryListService {
         return groceryListRepo.updateCheckItems(containerId, listId, itemIds, scope);
     }
 
-    public Response updateListName(String containerId, String listId, String listName) throws Exception {
-        return groceryListRepo.updateListName(containerId, listId, listName);
+    public Response updateList(String containerId, String listId, String listName, GroceryListRole scope) throws Exception {
+        return groceryListRepo.updateList(containerId, listId, listName, scope);
     }
 }
