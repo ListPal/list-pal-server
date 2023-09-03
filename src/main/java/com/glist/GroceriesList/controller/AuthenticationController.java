@@ -6,6 +6,7 @@ import com.glist.GroceriesList.model.response.Response;
 import com.glist.GroceriesList.model.response.UserAuthenticationResponse;
 import com.glist.GroceriesList.service.AuthenticationService;
 import com.glist.GroceriesList.service.CookieService;
+import com.glist.GroceriesList.service.ListPalEmailService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +25,7 @@ import java.nio.file.AccessDeniedException;
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
-
+    private final ListPalEmailService listpalEmailService;
     private final CookieService cookieService;
 
     @PostMapping("/register")
@@ -59,7 +60,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/check-login-status")
-    public ResponseEntity<Object> checkLoginStatus(@CookieValue(value = "auth-jwt") String cookie, HttpServletResponse response) throws Exception {
+    public ResponseEntity<Object> checkLoginStatus(@CookieValue("auth-jwt") String cookie, HttpServletResponse response) throws Exception {
         try {
             UserAuthenticationResponse res = authenticationService.checkAuthentication(cookie);
             return ResponseEntity.ok(res);
@@ -74,5 +75,11 @@ public class AuthenticationController {
     @PostMapping("/get-user-info")
     public ResponseEntity<Response> getUserInfo(@CookieValue("auth-jwt") String authCookie) throws AccessDeniedException {
         return ResponseEntity.ok(authenticationService.getUserInfo(authCookie));
+    }
+
+    @GetMapping("/reset-password")
+    public ResponseEntity<String> getResetPasswordLink() {
+        listpalEmailService.sendForgotPasswordLink("kate.anderson0608@gmail.com");
+        return ResponseEntity.ok("Successfully sent email");
     }
 }
