@@ -241,24 +241,27 @@ public class PrivateController {
         }
     }
 
-//    // ADD PEOPLE TO LIST
-//    @PostMapping(value = "/add-people", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-//    public ResponseEntity<Response> addPeopleToList(@RequestBody GroceryList list, @RequestBody List<String> people) {
-//        try {
-//            // Validate input
-//
-//            return ResponseEntity.ok(groceryListService.addPeopleToList(list, people));
-//        } catch (IllegalArgumentException e) {
-//            log.error(e.getMessage());
-//            Response res = new Response(400, e.getMessage());
-//            return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
-//        } catch (Exception e) {
-//            log.error(e.getMessage());
-//            Response res = new Response(500, e.getMessage());
-//            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
+    // ADD PEOPLE TO LIST
+    @PostMapping(value = "/add-people", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public ResponseEntity<Response> addPeopleToList(@RequestBody AddPeopleApiRequestBody body) {
+        try {
+            // TODO: Validate input
 
+            return ResponseEntity.ok(groceryListService.addPeopleToList(body.containerId, body.listId, body.people));
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            Response res = new Response(400, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (AccessDeniedException e) {
+            log.error(e.getMessage());
+            Response res = new Response(401, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
     // DELETE A LIST
     @DeleteMapping(value = "/delete-list", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -270,10 +273,13 @@ public class PrivateController {
             // Validate input
             Utils.validateInput(body.containerId);
             Utils.validateInput(body.listId);
+            if (body.scope.equals(GroceryListRole.RESTRICTED)) {
+                // Ensure authorized subject for the requested asset
+                authenticationService.ensureRestrictedSubject(authCookie, body.listId);
+                return ResponseEntity.ok(groceryListService.deleteRestrictedList(body.containerId, body.listId));
+            }
             // Ensure authorized subject for the requested asset
             authenticationService.ensurePrivateSubject(authCookie, body.containerId);
-            if (body.scope.equals(GroceryListRole.RESTRICTED))
-                return ResponseEntity.ok(groceryListService.deleteRestrictedList(body.containerId, body.listId));
             return ResponseEntity.ok(groceryListService.deleteList(body.containerId, body.listId));
         } catch (IllegalArgumentException e) {
             log.error(e.getMessage());

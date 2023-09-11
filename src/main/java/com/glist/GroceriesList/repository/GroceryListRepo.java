@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.nio.file.AccessDeniedException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,13 +40,10 @@ public class GroceryListRepo {
         if (scope != null) {
             newList.setScope(GroceryListRole.valueOf(scope));
         }
-        Set<String> peopleSet = new HashSet<>();
-        peopleSet.add(username);
         CollapsedList newCollapsedList = CollapsedList.builder()
                 .id(newList.getId())
                 .listName(newList.getListName())
                 .scope(newList.getScope())
-                .people(peopleSet)
                 .build();
         container.addGroceryCollapsedList(newCollapsedList);
 
@@ -63,7 +61,7 @@ public class GroceryListRepo {
         } else if (!list.getContainerId().equals(containerId)) {
             return new Response(401, "No list was found that matches container id: " + containerId);
         } else if (!list.getScope().name().equals(scope)) {
-            return new Response(401, "List scope doesn't match your authorization");
+            throw new AccessDeniedException("List scope doesn't match your authorization");
         } else {
             list.addItem(newItem);
             listDbRepository.save(list);
@@ -79,7 +77,7 @@ public class GroceryListRepo {
         } else if (!list.getContainerId().equals(containerId)) {
             return new Response(401, "No list was found that matches container id: " + containerId);
         } else if (!list.getScope().name().equals(scope)) {
-            return new Response(401, "List scope doesn't match your authorization");
+            throw new AccessDeniedException("List scope doesn't match your authorization");
         } else {
             list.deleteItemById(previousItemId); // O(1)
             list.addItem(updatedItem); // O(1)
@@ -111,15 +109,15 @@ public class GroceryListRepo {
     }
 
     public Response deleteRestrictedList(String containerId, String listId) throws Exception {
-        log.info("TRYING TO DELETE RESTRICTED LIST");
+        log.debug("TRYING TO DELETE RESTRICTED LIST");
         GroceryList list = listDbRepository.findListByIdExpanded(listId);
         if (list == null) {
-            log.info("NO LIST FOUND");
+            log.debug("NO LIST FOUND");
             return new Response(400, "No list was found that matches id: " + listId);
         }
 
         if (!list.getContainerId().equals(containerId)) { // Not the owner of the list
-            log.info("NOT THE OWNER OF THE LIST");
+            log.debug("NOT THE OWNER OF THE LIST");
             // Delete reference to list
             GroceryListContainer container = containerDbRepository.findContainerByIdCollapsed(containerId);
             if (container == null) {
@@ -130,17 +128,17 @@ public class GroceryListRepo {
             listDbRepository.save(list);
             containerDbRepository.save(container);
         } else { // Owner of the list
+            log.debug("OWNER OF THE LIST");
             Set<String> people = list.getPeople();
             GroceryContainerType containerType = Utils.inferTypeByContainerId(containerId);
             // Delete all collapsed lists that match
             CollapsedList collapsedList = CollapsedList.builder()
                     .id(list.getId())
                     .scope(list.getScope())
-                    .people(list.getPeople())
                     .listName(list.getListName())
                     .build();
             Query query = new Query(Criteria.where("username").in(people).and("containerType").is(containerType));
-            Update update = new Update().pull("collapsedLists",  collapsedList);
+            Update update = new Update().pull("collapsedLists", collapsedList);
 
             // Delete all references to the list
             mongoTemplate.updateMulti(query, update, GroceryListContainer.class);
@@ -160,7 +158,7 @@ public class GroceryListRepo {
         } else if (!list.getContainerId().equals(containerId)) {
             return new Response(401, "No list was found that matches container id: " + containerId);
         } else if (!list.getScope().name().equals(scope)) {
-            return new Response(401, "List scope doesn't match your authorization");
+            throw new AccessDeniedException("List scope doesn't match your authorization");
         } else {
             // Delete list item from list
             list.deleteItemById(itemId);
@@ -189,7 +187,7 @@ public class GroceryListRepo {
         } else if (!list.getContainerId().equals(containerId)) {
             return new Response(401, "List doesn't belong to the provided container id: " + containerId);
         } else if (!list.getScope().name().equals(scope)) {
-            return new Response(401, "List scope doesn't match your authorization");
+            throw new AccessDeniedException("List scope doesn't match your authorization");
         } else {
             return new Response(200, list);
         }
@@ -204,7 +202,7 @@ public class GroceryListRepo {
         } else if (!list.getContainerId().equals(containerId)) {
             return new Response(401, "No list was found that matches container id: " + containerId);
         } else if (!list.getScope().name().equals(scope)) {
-            return new Response(401, "List scope doesn't match your authorization");
+            throw new AccessDeniedException("List scope doesn't match your authorization");
         } else {
             list.updateAllChecked(itemIds);
             listDbRepository.save(list);
@@ -216,20 +214,39 @@ public class GroceryListRepo {
         // Get list
         GroceryList list = listDbRepository.findListByIdExpanded(listId);
         GroceryListContainer container = containerDbRepository.findContainerByIdCollapsed(containerId);
-        CollapsedList collapsedList = container.getCollapsedListById(listId);
-        if (list == null || collapsedList == null) {
-            return new Response(400, "No list was found that matches id: " + listId);
+        if (list == null) {
+            return new Response(401, "No list was found that matches id: " + listId);
         } else if (!list.getContainerId().equals(containerId)) {
             return new Response(401, "No list was found that matches container id: " + containerId);
         } else {
+            // A PRIVATE LIST IS A RESTRICTED LIST WITH ONLY ONE PERSON IN PEOPLE
+            // If scope is changed to private, delete all other references to this list
+            if (scope.equals(GroceryListRole.PRIVATE) && list.getPeople().size() > 1) {
+                log.info("ATTEMPTING TO DELETE ALL OTHER REFERENCES TO THIS LIST");
+                // Find containers (bulk) query
+                CollapsedList collapsedList = CollapsedList.builder()
+                        .id(list.getId())
+                        .scope(list.getScope())
+                        .listName(list.getListName())
+                        .build();
+                log.info(collapsedList.toString());
+                Query query = new Query(Criteria.where("username").in(list.getPeople()).and("containerType").is(container.getContainerType()));
+                Update update = new Update().pull("collapsedLists", collapsedList);
+                // Perform the update operation on multiple documents.
+                mongoTemplate.updateMulti(query, update, GroceryListContainer.class);
+            }
+            // Update list elements
+            Set<String> people = new HashSet<>();
+            people.add(container.getUsername());
+            list.setPeople(people);
             list.setListName(listName);
             list.setScope(scope);
-            container.deleteCollapsedListById(listId);
+            if (container.getCollapsedListById(listId) != null)
+                container.deleteCollapsedListById(listId);
             container.getCollapsedLists().add(CollapsedList.builder()
                     .listName(listName)
                     .scope(scope)
-                    .id(collapsedList.getId())
-                    .people(collapsedList.getPeople())
+                    .id(list.getId())
                     .build());
             listDbRepository.save(list);
             containerDbRepository.save(container);
@@ -256,7 +273,6 @@ public class GroceryListRepo {
         CollapsedList collapsedList = CollapsedList.builder()
                 .id(groceryList.getId())
                 .scope(groceryList.getScope())
-                .people(groceryList.getPeople())
                 .listName(groceryList.getListName())
                 .build();
         Update update = new Update().addToSet("collapsedLists", collapsedList);

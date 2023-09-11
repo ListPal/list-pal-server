@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 
 @Slf4j
@@ -38,6 +39,10 @@ public class PublicController {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());
             return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (AccessDeniedException e) {
+            log.error(e.getMessage());
+            Response res = new Response(401, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
             log.error(e.getMessage());
             Response res = new Response(500, e.getMessage());
@@ -72,6 +77,10 @@ public class PublicController {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());
             return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (AccessDeniedException e) {
+            log.error(e.getMessage());
+            Response res = new Response(401, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
             log.error(e.getMessage());
             Response res = new Response(500, e.getMessage());
@@ -107,6 +116,10 @@ public class PublicController {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());
             return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (AccessDeniedException e) {
+            log.error(e.getMessage());
+            Response res = new Response(401, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
             log.error(e.getMessage());
             Response res = new Response(500, e.getMessage());
@@ -127,6 +140,10 @@ public class PublicController {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());
             return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (AccessDeniedException e) {
+            log.error(e.getMessage());
+            Response res = new Response(401, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
             log.error(e.getMessage());
             Response res = new Response(500, e.getMessage());
@@ -148,6 +165,10 @@ public class PublicController {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());
             return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (AccessDeniedException e) {
+            log.error(e.getMessage());
+            Response res = new Response(401, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
             log.error(e.getMessage());
             Response res = new Response(500, e.getMessage());
@@ -159,28 +180,5 @@ public class PublicController {
     @PostMapping("/check")
     public ResponseEntity<String> check() {
         return ResponseEntity.ok("Running");
-    }
-
-    // ADD PEOPLE TO LIST
-    @PostMapping(value = "/add-people", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<Response> addPeopleToList(@RequestBody AddPeopleApiRequestBody body) {
-        try {
-            log.info("Hit endpoint with body: {");
-            log.info("list: " + body.containerId );
-            log.info("list: " + body.listId );
-            log.info("people: " + body.people);
-            log.info("}");
-            // TODO: Validate input
-
-            return ResponseEntity.ok(groceryListService.addPeopleToList(body.containerId, body.listId, body.people));
-        } catch (IllegalArgumentException e) {
-            log.error(e.getMessage());
-            Response res = new Response(400, e.getMessage());
-            return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            Response res = new Response(500, e.getMessage());
-            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
     }
 }

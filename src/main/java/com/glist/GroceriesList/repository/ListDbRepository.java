@@ -16,7 +16,4 @@ public interface ListDbRepository extends MongoRepository<GroceryList, String> {
 
     @Query(value="{id:'?0'}")
     List<GroceryList> findAll(String userId);
-
-    @Query(value = "{ '_id' : ?0 }", fields = "{ 'people' : 1 }")
-    CollapsedList findPeopleByListId(String id);
 }

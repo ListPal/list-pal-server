@@ -11,5 +11,4 @@ public class CollapsedList {
     private final String listName;
     private final String id;
     private GroceryListRole scope;
-    private Set<String> people;
 }

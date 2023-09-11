@@ -145,6 +145,7 @@ public class UserRepo {
     }
 
     public void ensureAuthorizedSubject(String token, String containerId) throws AccessDeniedException{
+        log.debug("CHECKING PRIVATE AUTHORITY");
         // Extract username from jwt
         String username = jwtService.extractUsername(token);
         if (username == null) {
@@ -160,6 +161,7 @@ public class UserRepo {
     }
 
     public void ensureRestrictedSubject(String token, String listId) throws AccessDeniedException {
+        log.debug("CHECKING RESTRICTED AUTHORITY");
         // Extract username from jwt
         String username = jwtService.extractUsername(token);
         if (username == null) {
@@ -167,7 +169,7 @@ public class UserRepo {
         }
 
         // Ensure username matches the username in the requested container
-        CollapsedList list = listDbRepository.findPeopleByListId(listId);
+        GroceryList list = listDbRepository.findListByIdCollapsed(listId);
         if (!list.getPeople().contains(username)) {
             throw new AccessDeniedException("Not an authorized subject to request this asset");
         }
