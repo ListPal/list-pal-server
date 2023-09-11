@@ -32,10 +32,12 @@ public class GroceryListContainer {
         }
     }
 
-    public void deleteCollapsedListById(String id) {
+    public void deleteCollapsedListById(String id) throws Exception {
         CollapsedList list = getCollapsedListById(id);
         if (list != null) {
             collapsedLists.remove(list);
+        } else {
+            throw new Exception("no list found in this container that matches the list id");
         }
     }
 

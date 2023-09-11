@@ -33,9 +33,14 @@ public class AuthenticationService {
         return userRepo.checkAuthentication(token);
     }
 
-    public void ensureAuthorizedSubject(String token, String containerId) throws AccessDeniedException {
+    public void ensurePrivateSubject(String token, String containerId) throws AccessDeniedException {
         if (token == null) throw new AccessDeniedException("No token found.");
         userRepo.ensureAuthorizedSubject(token, containerId);
+    }
+
+    public void ensureRestrictedSubject(String token, String listId) throws AccessDeniedException {
+        if (token == null) throw new AccessDeniedException("No token found.");
+        userRepo.ensureRestrictedSubject(token, listId);
     }
 
     public Response getUserInfo(String token) throws AccessDeniedException {

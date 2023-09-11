@@ -2,6 +2,7 @@ package com.glist.GroceriesList.repository;
 
 import com.glist.GroceriesList.model.groceries.CollapsedList;
 import com.glist.GroceriesList.model.groceries.GroceryContainerType;
+import com.glist.GroceriesList.model.groceries.GroceryList;
 import com.glist.GroceriesList.model.groceries.GroceryListContainer;
 import com.glist.GroceriesList.model.request.AuthenticationRequest;
 import com.glist.GroceriesList.model.request.RegisterRequest;
@@ -13,6 +14,7 @@ import com.glist.GroceriesList.service.JwtService;
 import com.mongodb.MongoWriteException;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,14 +24,17 @@ import org.springframework.stereotype.Repository;
 import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Repository
 @Data
 @RequiredArgsConstructor
+@Slf4j
 public class UserRepo {
     private final UserDbRepository userDbRepository;
     private final ContainerDbRepository containerDbRepository;
+    private final ListDbRepository listDbRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -148,7 +153,22 @@ public class UserRepo {
 
         // Ensure username matches the username in the requested container
         GroceryListContainer container = containerDbRepository.findContainerByIdCollapsed(containerId);
+
         if (!container.getUsername().equals(username)) {
+            throw new AccessDeniedException("Not an authorized subject to request this asset");
+        }
+    }
+
+    public void ensureRestrictedSubject(String token, String listId) throws AccessDeniedException {
+        // Extract username from jwt
+        String username = jwtService.extractUsername(token);
+        if (username == null) {
+            throw new AccessDeniedException("No username in jwt found.");
+        }
+
+        // Ensure username matches the username in the requested container
+        CollapsedList list = listDbRepository.findPeopleByListId(listId);
+        if (!list.getPeople().contains(username)) {
             throw new AccessDeniedException("Not an authorized subject to request this asset");
         }
     }

@@ -2,11 +2,8 @@ package com.glist.GroceriesList.service;
 
 import com.glist.GroceriesList.configuration.ListPalConfig;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,7 +18,7 @@ public class CookieService {
         jwtCookie.setMaxAge(3600 * 20); // 20 hrs
         jwtCookie.setHttpOnly(true);
         jwtCookie.setDomain(listPalConfig.getServerDomain());
-        jwtCookie.setSecure(true);
+//        jwtCookie.setSecure(true);
         return jwtCookie;
     }
 
@@ -31,7 +28,7 @@ public class CookieService {
         jwtCookie.setMaxAge(0);
         jwtCookie.setHttpOnly(true);
         jwtCookie.setDomain(listPalConfig.getServerDomain());
-        jwtCookie.setSecure(true);
+//        jwtCookie.setSecure(true);
         return jwtCookie;
     }
 }

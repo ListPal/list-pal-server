@@ -1,4 +1,8 @@
 package com.glist.GroceriesList.model.groceries;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.DateSerializer;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.Getter;
@@ -28,7 +32,7 @@ public class GroceryList {
     private String containerId;
     private String listName;
     private LocalDateTime dateCreated;
-    private List<String> people;
+    private Set<String> people;
     private Set<GroceryListItem> groceryListItems;
 
     public GroceryList(String listName, String containerId) {
@@ -37,14 +41,14 @@ public class GroceryList {
         this.listName = listName;
         this.groceryListItems = new HashSet<>();
         this.dateCreated = LocalDateTime.now();
-        this.people = new ArrayList<>();
+        this.people = new HashSet<>();
     }
     public void addPeopleToList(List<String> people) {
         this.people.addAll(people);
     }
 
     public void removePeopleFromList(List<String> people) {
-        this.people.removeAll(people);
+        people.forEach(this.people::remove);
     }
     public void addItem(GroceryListItem item) {
         this.groceryListItems.add(item);

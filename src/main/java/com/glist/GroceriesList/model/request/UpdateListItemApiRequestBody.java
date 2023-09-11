@@ -1,5 +1,6 @@
 package com.glist.GroceriesList.model.request;
 
+import com.glist.GroceriesList.model.groceries.GroceryListRole;
 import com.glist.GroceriesList.model.user.CollapsedUser;
 
 public class UpdateListItemApiRequestBody {
@@ -12,5 +13,6 @@ public class UpdateListItemApiRequestBody {
     public boolean checked;
     public String category;
     public int priority;
+    public GroceryListRole scope;
 
 }

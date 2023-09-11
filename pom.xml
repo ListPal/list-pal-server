@@ -6,14 +6,14 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.1.0</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 <!--	<packaging>war</packaging>-->
 	<groupId>com.glist</groupId>
 	<artifactId>GroceriesList</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>GroceriesList</name>
-	<description>Demo project for Spring Boot</description>
+	<description>ListPal Server</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>
@@ -39,7 +39,6 @@
 			<artifactId>spring-boot-starter-data-mongodb</artifactId>
 			<version>3.1.2</version>
 		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/org.springframework/spring-web -->
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -70,7 +69,6 @@
 			<artifactId>jakarta.persistence-api</artifactId>
 			<version>3.1.0</version>
 		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
@@ -97,6 +95,7 @@
 			<artifactId>spring-boot-starter-mail</artifactId>
 			<version>3.1.3</version>
 		</dependency>
+
 	</dependencies>
 
 	<build>

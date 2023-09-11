@@ -1,5 +1,6 @@
 package com.glist.GroceriesList.service;
 
+import com.glist.GroceriesList.model.groceries.GroceryList;
 import com.glist.GroceriesList.model.groceries.GroceryListItem;
 import com.glist.GroceriesList.model.groceries.GroceryListRole;
 import com.glist.GroceriesList.model.response.Response;
@@ -8,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -20,8 +22,8 @@ public class GroceryListService {
         this.groceryListRepo = glRepo;
     }
 
-    public Response createList(String containerId, String listName, String scope) throws Exception {
-        return groceryListRepo.createList(containerId, listName, scope);
+    public Response createList(String containerId, String listName, String scope, String username) throws Exception {
+        return groceryListRepo.createList(containerId, listName, scope, username);
     }
 
     public Response getList(String containerId, String listId, String scope) throws Exception {
@@ -54,5 +56,13 @@ public class GroceryListService {
 
     public Response updateList(String containerId, String listId, String listName, GroceryListRole scope) throws Exception {
         return groceryListRepo.updateList(containerId, listId, listName, scope);
+    }
+
+    public Response addPeopleToList(String containerId, String listId, List<String> people) throws Exception {
+        return groceryListRepo.addPeopleToList(containerId, listId, people);
+    }
+
+    public Response deleteRestrictedList(String containerId, String listId) throws Exception{
+        return groceryListRepo.deleteRestrictedList(containerId, listId);
     }
 }

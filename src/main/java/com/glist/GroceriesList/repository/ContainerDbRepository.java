@@ -16,4 +16,7 @@ public interface ContainerDbRepository extends MongoRepository<GroceryListContai
 
     @Query(value="{username:'?0'}")
     List<GroceryListContainer> findAll(String username);
+
+    @Query("{'collapsedLists.id': ?0}")
+    void removeCollapsedListsByListId(String listId);
 }
