@@ -52,16 +52,15 @@ public class PrivateController {
     @PostMapping(value = "/get-list", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<Response> getList(@RequestBody GetListApiRequestBody body, @CookieValue("auth-jwt") String authCookie) throws Exception {
         try {
+            log.info(body.listId);
+            log.info("CONTAINER ID: " + body.containerId);
+            log.info("CONTAINER ID: " + body.scope);
             // Validate input
             Utils.validateInput(body.containerId);
             Utils.validateInput(body.listId);
             Utils.validateInput(body.scope.name());
             // Ensure authorized subject for the requested asset
-            if (body.scope.equals(GroceryListRole.PRIVATE))
-                authenticationService.ensurePrivateSubject(authCookie, body.containerId);
-            else if (body.scope.equals(GroceryListRole.RESTRICTED))
-                authenticationService.ensureRestrictedSubject(authCookie, body.listId);
-            else throw new AccessDeniedException("List scope doesn't match your authorization");
+            authenticationService.ensureRestrictedSubject(authCookie, body.listId);
             Response res = groceryListService.getList(body.containerId, body.listId, body.scope.name());
             return ResponseEntity.ok(res);
         } catch (IllegalArgumentException e) {
@@ -115,15 +114,11 @@ public class PrivateController {
             Utils.validateInput(body.quantity);
             Utils.validateInput(body.scope.name());
             // Ensure authorized subject for the requested asset
-            if (body.scope.equals(GroceryListRole.PRIVATE))
-                authenticationService.ensurePrivateSubject(authCookie, body.containerId);
-            else if (body.scope.equals(GroceryListRole.RESTRICTED))
-                authenticationService.ensureRestrictedSubject(authCookie, body.listId);
-            else throw new AccessDeniedException("List scope doesn't match your authorization");
+            authenticationService.ensureRestrictedSubject(authCookie, body.listId);
             // Create user from token
             String name = jwtService.extractClaim(authCookie, claims -> claims.get("name", String.class));
             String username = jwtService.extractUsername(authCookie);
-            CollapsedUser collapsedUser = new CollapsedUser(name, username);
+            CollapsedUser collapsedUser = new CollapsedUser(name, username, null);
             // Create item
             GroceryListItem newItem = new GroceryListItem(body.listId, body.name, body.quantity, collapsedUser);
             Response res = groceryListService.createGroceryListItem(body.containerId, newItem, body.scope.name());
@@ -159,13 +154,9 @@ public class PrivateController {
             Utils.validateInput(body.priority);
             Utils.validateInput(body.scope.name());
             // Ensure authorized subject for the requested asset
-            if (body.scope.equals(GroceryListRole.PRIVATE))
-                authenticationService.ensurePrivateSubject(authCookie, body.containerId);
-            else if (body.scope.equals(GroceryListRole.RESTRICTED))
-                authenticationService.ensureRestrictedSubject(authCookie, body.listId);
-            else throw new AccessDeniedException("List scope doesn't match your authorization");
+            authenticationService.ensureRestrictedSubject(authCookie, body.listId);
             // Create Collapsed user
-            CollapsedUser collapsedUser = new CollapsedUser(body.user.getName().trim(), body.user.getUsername().trim());
+            CollapsedUser collapsedUser = new CollapsedUser(body.user.getName().trim(), body.user.getUsername().trim(), null);
             // Create new item
             GroceryListItem newItem = new GroceryListItem(body.listId, body.name.trim(), body.quantity, collapsedUser);
             newItem.setCategory(body.category.trim());
@@ -198,6 +189,8 @@ public class PrivateController {
             Utils.validateInput(body.containerId);
             Utils.validateInput(body.listId);
             Utils.validateInput(body.scope.name());
+            // Ensure authorized subject for the requested asset
+            authenticationService.ensureRestrictedSubject(authCookie, body.listId);
             return ResponseEntity.ok(groceryListService.updateCheckItems(body.containerId, body.listId, body.itemIds, body.scope.name()));
         } catch (IllegalArgumentException e) {
             log.error(e.getMessage());
@@ -241,13 +234,63 @@ public class PrivateController {
         }
     }
 
+    // GET PEOPLE FROM LIST
+    @PostMapping(value = "/get-people-from-list", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public ResponseEntity<Response> getPeopleFromList(@RequestBody AddPeopleApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
+        try {
+            Utils.validateInput(body.containerId);
+            Utils.validateInput(body.listId);
+            // Ensure authorized subject for the requested asset
+            authenticationService.ensurePrivateSubject(authCookie, body.containerId);
+            return ResponseEntity.ok(groceryListService.getPeopleFromList(body.containerId, body.listId));
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            Response res = new Response(400, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (AccessDeniedException e) {
+            log.error(e.getMessage());
+            Response res = new Response(401, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // ADD PEOPLE TO LIST
     @PostMapping(value = "/add-people", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<Response> addPeopleToList(@RequestBody AddPeopleApiRequestBody body) {
+    public ResponseEntity<Response> addPeopleToList(@RequestBody AddPeopleApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
         try {
-            // TODO: Validate input
-
+            Utils.validateInput(body.containerId);
+            Utils.validateInput(body.listId);
+            // Ensure authorized subject for the requested asset
+            authenticationService.ensureRestrictedSubject(authCookie, body.listId);
             return ResponseEntity.ok(groceryListService.addPeopleToList(body.containerId, body.listId, body.people));
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            Response res = new Response(400, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (AccessDeniedException e) {
+            log.error(e.getMessage());
+            Response res = new Response(401, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // DELETE PEOPLE FROM LIST
+    @DeleteMapping("/remove-people-from-list")
+    public ResponseEntity<Response> removePeopleFromList(@RequestBody AddPeopleApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
+        try {
+            Utils.validateInput(body.containerId);
+            Utils.validateInput(body.listId);
+            // Ensure authorized subject for the requested asset
+            authenticationService.ensurePrivateSubject(authCookie, body.containerId);
+            return ResponseEntity.ok(groceryListService.removePeopleFromList(body.containerId, body.listId, body.people));
         } catch (IllegalArgumentException e) {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());

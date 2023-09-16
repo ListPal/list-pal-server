@@ -15,7 +15,7 @@ public class CookieService {
     public Cookie makeAuthCookie(final String token) {
         Cookie jwtCookie = new Cookie("auth-jwt", token);
         jwtCookie.setPath("/");
-        jwtCookie.setMaxAge(3600 * 20); // 20 hrs
+        jwtCookie.setMaxAge(3600 * 23 * 20); // 23 hrs * 20 (almost 20 days_
         jwtCookie.setHttpOnly(true);
         jwtCookie.setDomain(listPalConfig.getServerDomain());
 //        jwtCookie.setSecure(true);

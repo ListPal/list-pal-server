@@ -65,4 +65,12 @@ public class GroceryListService {
     public Response deleteRestrictedList(String containerId, String listId) throws Exception{
         return groceryListRepo.deleteRestrictedList(containerId, listId);
     }
+
+    public Response removePeopleFromList(String containerId, String listId, List<String> people) throws Exception {
+        return groceryListRepo.removePeopleFromList(containerId, listId, people);
+    }
+
+    public Response getPeopleFromList(String containerId, String listId) throws Exception{
+        return groceryListRepo.getPeopleFromList(containerId, listId);
+    }
 }

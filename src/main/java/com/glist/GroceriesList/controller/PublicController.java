@@ -68,7 +68,7 @@ public class PublicController {
                 name = "unnamed";
                 username = "unknown";
             }
-            CollapsedUser collapsedUser = new CollapsedUser(name, username);
+            CollapsedUser collapsedUser = new CollapsedUser(name, username, null);
             // Create item
             GroceryListItem newItem = new GroceryListItem(body.listId, body.name, body.quantity, collapsedUser);
             Response res = groceryListService.createGroceryListItem(body.containerId, newItem, GroceryListRole.PUBLIC.name());
@@ -103,7 +103,7 @@ public class PublicController {
             Utils.validateInput(body.quantity);
             Utils.validateInput(body.priority);
             // Create Collapsed user
-            CollapsedUser collapsedUser = new CollapsedUser(body.user.getName(), body.user.getUsername());
+            CollapsedUser collapsedUser = new CollapsedUser(body.user.getName(), body.user.getUsername(), null);
             // Create new item
             GroceryListItem newItem = new GroceryListItem(body.listId, body.name, body.quantity, collapsedUser);
             newItem.setCategory(body.category);
@@ -180,5 +180,26 @@ public class PublicController {
     @PostMapping("/check")
     public ResponseEntity<String> check() {
         return ResponseEntity.ok("Running");
+    }
+
+    @PostMapping(value = "/add-people", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public ResponseEntity<Response> addPeopleToList(@RequestBody AddPeopleApiRequestBody body) {
+        try {
+            // TODO: Validate input
+
+            return ResponseEntity.ok(groceryListService.addPeopleToList(body.containerId, body.listId, body.people));
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            Response res = new Response(400, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (AccessDeniedException e) {
+            log.error(e.getMessage());
+            Response res = new Response(401, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

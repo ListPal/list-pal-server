@@ -8,6 +8,7 @@ import com.glist.GroceriesList.model.request.AuthenticationRequest;
 import com.glist.GroceriesList.model.request.RegisterRequest;
 import com.glist.GroceriesList.model.response.Response;
 import com.glist.GroceriesList.model.response.UserAuthenticationResponse;
+import com.glist.GroceriesList.model.user.CollapsedUser;
 import com.glist.GroceriesList.model.user.Role;
 import com.glist.GroceriesList.model.user.User;
 import com.glist.GroceriesList.service.JwtService;
@@ -18,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
@@ -119,7 +121,7 @@ public class UserRepo {
     }
 
 
-    public UserAuthenticationResponse checkAuthentication(String token) throws Exception{
+    public UserAuthenticationResponse checkAuthentication(String token) throws Exception {
         User user = userDbRepository.findByUsername(jwtService.extractUsername(token));
         if (user == null) {
             throw new AccessDeniedException("User Not Found");
@@ -131,7 +133,7 @@ public class UserRepo {
                 .build();
     }
 
-    public Response getUserInfoFromToken(String token) throws AccessDeniedException{
+    public Response getUserInfoFromToken(String token) throws AccessDeniedException {
         // Extract claims from token
         String firstName = jwtService.extractClaim(token, claims -> claims.get("name", String.class));
         String id = jwtService.extractClaim(token, claims -> claims.get("id", String.class));
@@ -144,8 +146,8 @@ public class UserRepo {
         return new Response(200, user);
     }
 
-    public void ensureAuthorizedSubject(String token, String containerId) throws AccessDeniedException{
-        log.debug("CHECKING PRIVATE AUTHORITY");
+    public void ensureAuthorizedSubject(String token, String containerId) throws AccessDeniedException {
+        log.info("CHECKING PRIVATE AUTHORITY");
         // Extract username from jwt
         String username = jwtService.extractUsername(token);
         if (username == null) {
@@ -161,7 +163,7 @@ public class UserRepo {
     }
 
     public void ensureRestrictedSubject(String token, String listId) throws AccessDeniedException {
-        log.debug("CHECKING RESTRICTED AUTHORITY");
+        log.info("CHECKING RESTRICTED AUTHORITY");
         // Extract username from jwt
         String username = jwtService.extractUsername(token);
         if (username == null) {
@@ -170,8 +172,29 @@ public class UserRepo {
 
         // Ensure username matches the username in the requested container
         GroceryList list = listDbRepository.findListByIdCollapsed(listId);
+        log.info(username);
         if (!list.getPeople().contains(username)) {
             throw new AccessDeniedException("Not an authorized subject to request this asset");
         }
+    }
+
+
+    public Response lookUpUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userDbRepository.findByUsername(username);
+        if (user == null) {
+            throw new UsernameNotFoundException("No user matches username: " + username);
+        }
+        CollapsedUser collapsedUser = new CollapsedUser(user.getName(), user.getUsername(), user.getLastName());
+        return new Response(200, collapsedUser);
+    }
+
+    public Response lookUpUserByPhone(String phone) throws UsernameNotFoundException {
+        List<User> users = userDbRepository.findByPhone(phone);
+        if (users == null || users.isEmpty()) {
+            throw new UsernameNotFoundException("No user matches username: " + phone);
+        }
+        List<CollapsedUser> collapsedUsers = new ArrayList<>();
+        users.forEach(user -> collapsedUsers.add(new CollapsedUser(user.getName(), user.getUsername(), user.getLastName())));
+        return new Response(200, collapsedUsers);
     }
 }

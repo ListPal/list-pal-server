@@ -83,6 +83,5 @@ public class GroceryList {
         groceryListItems.forEach(item -> {
             item.setChecked(itemIds.contains(item.getId()));
         });
-
     }
 }
