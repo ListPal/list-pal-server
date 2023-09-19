@@ -1,5 +1,6 @@
 package com.glist.GroceriesList.controller;
 
+import com.glist.GroceriesList.service.UserService;
 import com.glist.GroceriesList.utils.Utils;
 import com.glist.GroceriesList.model.groceries.GroceryListItem;
 import com.glist.GroceriesList.model.groceries.GroceryListRole;
@@ -24,11 +25,12 @@ public class PrivateController {
     private final GroceryListService groceryListService;
     private final JwtService jwtService;
     private final AuthenticationService authenticationService;
+    private final UserService userService;
 
     // GET ALL LIST
     @ResponseBody
     @GetMapping("/get-lists")
-    public ResponseEntity<Response> getLists(@RequestParam String containerId, @CookieValue("auth-jwt") String authCookie) throws Exception {
+    public ResponseEntity<Response> getLists(@RequestParam String containerId, @CookieValue("auth-jwt") String authCookie) {
         try {
             // Validate input
             Utils.validateInput(containerId);
@@ -50,11 +52,11 @@ public class PrivateController {
     // GET A SINGLE LIST
     @ResponseBody
     @PostMapping(value = "/get-list", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<Response> getList(@RequestBody GetListApiRequestBody body, @CookieValue("auth-jwt") String authCookie) throws Exception {
+    public ResponseEntity<Response> getList(@RequestBody GetListApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
         try {
-            log.info(body.listId);
-            log.info("CONTAINER ID: " + body.containerId);
-            log.info("CONTAINER ID: " + body.scope);
+            log.debug(body.listId);
+            log.debug("CONTAINER ID: " + body.containerId);
+            log.debug("CONTAINER ID: " + body.scope);
             // Validate input
             Utils.validateInput(body.containerId);
             Utils.validateInput(body.listId);
@@ -185,7 +187,6 @@ public class PrivateController {
     public ResponseEntity<Response> checkItems(@RequestBody CheckItemsApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
         try {
             // Validate input
-            if (body.itemIds.isEmpty()) return ResponseEntity.ok(new Response(200, "No need to check items"));
             Utils.validateInput(body.containerId);
             Utils.validateInput(body.listId);
             Utils.validateInput(body.scope.name());
@@ -281,7 +282,6 @@ public class PrivateController {
             return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
     // DELETE PEOPLE FROM LIST
     @DeleteMapping("/remove-people-from-list")
     public ResponseEntity<Response> removePeopleFromList(@RequestBody AddPeopleApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
@@ -306,24 +306,24 @@ public class PrivateController {
         }
     }
 
-    // DELETE A LIST
+    // RESET A LIST
     @DeleteMapping(value = "/delete-list", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<Response> deleteList(@RequestBody GetListApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
         try {
-            log.info("DELETE: " + body.containerId);
-            log.info("DELETE: " + body.listId);
-            log.info("DELETE: " + body.scope);
+            log.debug("DELETE: " + body.containerId);
+            log.debug("DELETE: " + body.listId);
+            log.debug("DELETE: " + body.scope);
             // Validate input
             Utils.validateInput(body.containerId);
             Utils.validateInput(body.listId);
             if (body.scope.equals(GroceryListRole.RESTRICTED)) {
                 // Ensure authorized subject for the requested asset
                 authenticationService.ensureRestrictedSubject(authCookie, body.listId);
-                return ResponseEntity.ok(groceryListService.deleteRestrictedList(body.containerId, body.listId));
+                return ResponseEntity.ok(groceryListService.deleteRestrictedList(body.containerId, body.listId, body.scope));
             }
             // Ensure authorized subject for the requested asset
             authenticationService.ensurePrivateSubject(authCookie, body.containerId);
-            return ResponseEntity.ok(groceryListService.deleteList(body.containerId, body.listId));
+            return ResponseEntity.ok(groceryListService.deleteList(body.containerId, body.listId, body.scope));
         } catch (IllegalArgumentException e) {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());
@@ -349,12 +349,33 @@ public class PrivateController {
             Utils.validateInput(body.itemId);
             Utils.validateInput(body.scope.name());
             // Ensure authorized subject for the requested asset
-            if (body.scope.equals(GroceryListRole.PRIVATE))
-                authenticationService.ensurePrivateSubject(authCookie, body.containerId);
-            else if (body.scope.equals(GroceryListRole.RESTRICTED))
-                authenticationService.ensureRestrictedSubject(authCookie, body.listId);
-            else throw new AccessDeniedException("List scope doesn't match your authorization");
+            authenticationService.ensureRestrictedSubject(authCookie, body.listId);
             return ResponseEntity.ok(groceryListService.deleteListItem(body.containerId, body.listId, body.itemId, body.scope.name()));
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            Response res = new Response(400, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (AccessDeniedException e) {
+            log.error(e.getMessage());
+            Response res = new Response(401, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping("/reset-list")
+    public ResponseEntity<Response> resetList(@RequestBody GetListApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
+        try {
+            // Validate input
+            Utils.validateInput(body.containerId);
+            Utils.validateInput(body.listId);
+            Utils.validateInput(body.scope.name());
+            // Ensure authorized subject for the requested asset
+            authenticationService.ensureRestrictedSubject(authCookie, body.listId);
+            return ResponseEntity.ok(groceryListService.resetList(body.containerId, body.listId, body.scope));
         } catch (IllegalArgumentException e) {
             log.error(e.getMessage());
             Response res = new Response(400, e.getMessage());

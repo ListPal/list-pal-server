@@ -32,6 +32,8 @@ public class AuthenticationController {
         UserAuthenticationResponse res = authenticationService.register(body);
         // Save jwt in browser cookie
         Cookie jwtCookie = cookieService.makeAuthCookie(res.getToken());
+        // Hide token from server response
+        res.setToken(null);
         // Send cookie in response header
         response.addCookie(jwtCookie);
 
@@ -45,6 +47,8 @@ public class AuthenticationController {
         Cookie jwtCookie = cookieService.makeAuthCookie(res.getToken());
         // Send cookie in response header
         response.addCookie(jwtCookie);
+        // Hide token from server response
+        res.setToken(null);
         return ResponseEntity.ok(res);
     }
 

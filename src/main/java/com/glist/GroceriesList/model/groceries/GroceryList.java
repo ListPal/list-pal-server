@@ -84,4 +84,8 @@ public class GroceryList {
             item.setChecked(itemIds.contains(item.getId()));
         });
     }
+
+    public void resetItems() {
+        groceryListItems.clear();
+    }
 }

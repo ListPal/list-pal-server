@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.Set;
 
@@ -42,8 +43,8 @@ public class GroceryListService {
         return groceryListRepo.updateGroceryListItem(containerId, newItem, previousItemId, scope);
     }
 
-    public Response deleteList(String containerId, String listId) throws Exception {
-        return groceryListRepo.deleteList(containerId, listId);
+    public Response deleteList(String containerId, String listId, GroceryListRole scope) throws Exception {
+        return groceryListRepo.deleteList(containerId, listId, scope);
     }
 
     public Response deleteListItem(String containerId, String listId, String  itemId, String scope) throws Exception {
@@ -62,8 +63,8 @@ public class GroceryListService {
         return groceryListRepo.addPeopleToList(containerId, listId, people);
     }
 
-    public Response deleteRestrictedList(String containerId, String listId) throws Exception{
-        return groceryListRepo.deleteRestrictedList(containerId, listId);
+    public Response deleteRestrictedList(String containerId, String listId, GroceryListRole scope) throws Exception{
+        return groceryListRepo.deleteRestrictedList(containerId, listId, scope);
     }
 
     public Response removePeopleFromList(String containerId, String listId, List<String> people) throws Exception {
@@ -72,5 +73,9 @@ public class GroceryListService {
 
     public Response getPeopleFromList(String containerId, String listId) throws Exception{
         return groceryListRepo.getPeopleFromList(containerId, listId);
+    }
+
+    public Response resetList(String containerId, String listId, GroceryListRole scope) throws AccessDeniedException {
+        return groceryListRepo.resetList(containerId, listId, scope);
     }
 }

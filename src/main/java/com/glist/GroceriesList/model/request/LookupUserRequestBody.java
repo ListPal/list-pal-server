@@ -8,5 +8,6 @@ import jakarta.persistence.Enumerated;
 public class LookupUserRequestBody {
     @Enumerated(EnumType.STRING)
     public UserLookupCriteria criteria;
+    public String requesterUsername;
     public String userIdentifier;
 }

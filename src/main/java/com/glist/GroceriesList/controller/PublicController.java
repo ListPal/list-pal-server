@@ -132,7 +132,6 @@ public class PublicController {
     public ResponseEntity<Response> checkItems(@RequestBody CheckItemsApiRequestBody body) {
         try {
             // Validate input
-            if (body.itemIds.isEmpty()) return ResponseEntity.ok(new Response(200, "No need to check items"));
             Utils.validateInput(body.containerId);
             Utils.validateInput(body.listId);
             return ResponseEntity.ok(groceryListService.updateCheckItems(body.containerId, body.listId, body.itemIds, GroceryListRole.PUBLIC.name()));
@@ -176,12 +175,6 @@ public class PublicController {
         }
     }
 
-    // SERVER CHECK ENDPOINT
-    @PostMapping("/check")
-    public ResponseEntity<String> check() {
-        return ResponseEntity.ok("Running");
-    }
-
     @PostMapping(value = "/add-people", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<Response> addPeopleToList(@RequestBody AddPeopleApiRequestBody body) {
         try {
@@ -202,4 +195,11 @@ public class PublicController {
             return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    // SERVER CHECK ENDPOINT
+    @PostMapping("/check")
+    public ResponseEntity<String> check() {
+        return ResponseEntity.ok("Running");
+    }
 }
+

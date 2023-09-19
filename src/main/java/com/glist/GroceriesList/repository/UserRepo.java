@@ -17,6 +17,9 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -24,10 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
 import java.nio.file.AccessDeniedException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Repository
 @Data
@@ -40,6 +40,7 @@ public class UserRepo {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final MongoTemplate mongoTemplate;
 
     public UserAuthenticationResponse register(RegisterRequest req) throws MongoWriteException {
         // Create User
@@ -51,6 +52,7 @@ public class UserRepo {
                 .password(passwordEncoder.encode(req.getPassword()))
                 .role(Role.USER_ROLE)
                 .phone(req.getPhone().trim())
+                .relevantUsers(new LinkedList<>())
                 .build();
 
         // Create containers
@@ -82,9 +84,8 @@ public class UserRepo {
         userDbRepository.insert(user);
 
         // Save containers to db
-        containerDbRepository.insert(todo);
-        containerDbRepository.insert(wishlist);
-        containerDbRepository.insert(grocery);
+        List<GroceryListContainer> newContainers = List.of(todo, wishlist, grocery);
+        containerDbRepository.saveAll(newContainers);
 
         // Return generated token
         Map<String, Object> extraClaims = new LinkedHashMap<>();
@@ -147,7 +148,7 @@ public class UserRepo {
     }
 
     public void ensureAuthorizedSubject(String token, String containerId) throws AccessDeniedException {
-        log.info("CHECKING PRIVATE AUTHORITY");
+        log.debug("CHECKING PRIVATE AUTHORITY");
         // Extract username from jwt
         String username = jwtService.extractUsername(token);
         if (username == null) {
@@ -163,7 +164,7 @@ public class UserRepo {
     }
 
     public void ensureRestrictedSubject(String token, String listId) throws AccessDeniedException {
-        log.info("CHECKING RESTRICTED AUTHORITY");
+        log.debug("CHECKING RESTRICTED AUTHORITY");
         // Extract username from jwt
         String username = jwtService.extractUsername(token);
         if (username == null) {
@@ -172,29 +173,65 @@ public class UserRepo {
 
         // Ensure username matches the username in the requested container
         GroceryList list = listDbRepository.findListByIdCollapsed(listId);
-        log.info(username);
+        log.debug(username);
         if (!list.getPeople().contains(username)) {
             throw new AccessDeniedException("Not an authorized subject to request this asset");
         }
     }
 
-
-    public Response lookUpUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userDbRepository.findByUsername(username);
-        if (user == null) {
-            throw new UsernameNotFoundException("No user matches username: " + username);
+    public Response lookUpUserByUsername(String requesterUsername, String requestedUsername) throws UsernameNotFoundException {
+        // TODO: OPTIMIZE BY USING BULK
+        User requester = userDbRepository.findByUsername(requesterUsername);
+        User requested = userDbRepository.findByUsername(requestedUsername);
+        if (requester == null) {
+            throw new UsernameNotFoundException("No user matches username: " + requesterUsername);
         }
-        CollapsedUser collapsedUser = new CollapsedUser(user.getName(), user.getUsername(), user.getLastName());
+        if (requested == null) {
+            throw new UsernameNotFoundException("No user matches username: " + requestedUsername);
+        }
+
+        // Update relevant people
+        requester.addRelevantPeople(requested.getUsername());
+        userDbRepository.save(requester);
+
+        CollapsedUser collapsedUser = new CollapsedUser(requested.getName(), requested.getUsername(), requested.getLastName());
         return new Response(200, collapsedUser);
     }
 
-    public Response lookUpUserByPhone(String phone) throws UsernameNotFoundException {
-        List<User> users = userDbRepository.findByPhone(phone);
-        if (users == null || users.isEmpty()) {
-            throw new UsernameNotFoundException("No user matches username: " + phone);
+    public Response lookUpUserByPhone(String requesterUsername, String requestedPhone) throws UsernameNotFoundException {
+        // TODO: OPTIMIZE BY USING BULK
+        User requesterUser = userDbRepository.findByUsername(requesterUsername);
+        List<User> users = userDbRepository.findByPhone(requestedPhone);
+        if (users.isEmpty()) {
+            throw new UsernameNotFoundException("No user matches username: " + requestedPhone);
         }
+        if (requesterUser == null) {
+            throw new UsernameNotFoundException("No user matches username: " + requesterUsername);
+        }
+
+        // Collapse users and send to client
         List<CollapsedUser> collapsedUsers = new ArrayList<>();
-        users.forEach(user -> collapsedUsers.add(new CollapsedUser(user.getName(), user.getUsername(), user.getLastName())));
+        users.forEach(user -> {
+            // Update relevant people
+            requesterUser.addRelevantPeople(user.getUsername());
+            collapsedUsers.add(new CollapsedUser(user.getName(), user.getUsername(), user.getLastName()));
+        });
+        users.add(requesterUser);
+        userDbRepository.saveAll(users);
         return new Response(200, collapsedUsers);
+    }
+
+    public Response fetchSuggestedPeople(String userIdentifier) throws UsernameNotFoundException {
+        User user = userDbRepository.findByUsername(userIdentifier);
+        if (user == null) {
+            throw new UsernameNotFoundException("No user matches username: " + userIdentifier);
+        }
+        log.debug("Fetching suggested people..." + user.getRelevantUsers().toString());
+        // Perform a bulk query to all the suggested users
+        Query query = new Query(Criteria.where("username").in(user.getRelevantUsers()));
+        List<CollapsedUser> users = new ArrayList<>();
+        mongoTemplate.find(query, User.class).forEach(thisuser -> users.add(new CollapsedUser(thisuser.getName(), thisuser.getUsername(), thisuser.getLastName())));
+        log.info("Done fetching suggested people..." + users);
+        return new Response(200, users);
     }
 }

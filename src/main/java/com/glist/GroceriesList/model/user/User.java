@@ -10,12 +10,11 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @Data
-@Document("users")
 @Builder
+@Document("users")
 public class User implements UserDetails {
     @Id
     private String id;
@@ -34,6 +33,7 @@ public class User implements UserDetails {
     private String todoContainerId;
     private String wishlistContainerId;
     private String groceryContainerId;
+    private LinkedList<String> relevantUsers;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -58,5 +58,18 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public void addRelevantPeople(String username) {
+        // If list contains the user, pop it and add to front
+        relevantUsers.remove(username);
+
+        // If list is at capacity use FIFO as the replacement policy
+        if (relevantUsers.size() >= 10) {
+            relevantUsers.removeLast();
+        }
+
+        // Add user to the beginning list
+        relevantUsers.addFirst(username);
     }
 }
