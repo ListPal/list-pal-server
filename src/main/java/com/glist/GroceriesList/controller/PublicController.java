@@ -70,7 +70,7 @@ public class PublicController {
             }
             CollapsedUser collapsedUser = new CollapsedUser(name, username, null);
             // Create item
-            GroceryListItem newItem = new GroceryListItem(body.listId, body.name, body.quantity, collapsedUser);
+            GroceryListItem newItem = new GroceryListItem(body.listId.trim(), body.name.trim(), body.category.trim(), body.quantity, collapsedUser);
             Response res = groceryListService.createGroceryListItem(body.containerId, newItem, GroceryListRole.PUBLIC.name());
             return ResponseEntity.ok(res);
         } catch (IllegalArgumentException e) {
@@ -105,7 +105,7 @@ public class PublicController {
             // Create Collapsed user
             CollapsedUser collapsedUser = new CollapsedUser(body.user.getName(), body.user.getUsername(), null);
             // Create new item
-            GroceryListItem newItem = new GroceryListItem(body.listId, body.name, body.quantity, collapsedUser);
+            GroceryListItem newItem = new GroceryListItem(body.listId, body.name.trim(), body.category.trim(), body.quantity, collapsedUser);
             newItem.setCategory(body.category);
             newItem.setChecked(body.checked);
             newItem.setPriority(body.priority);

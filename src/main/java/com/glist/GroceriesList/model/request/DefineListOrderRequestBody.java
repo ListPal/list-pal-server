@@ -1,19 +1,14 @@
 package com.glist.GroceriesList.model.request;
 
-
 import com.glist.GroceriesList.model.groceries.GroceryListItem;
 import com.glist.GroceriesList.model.groceries.GroceryListRole;
-import lombok.ToString;
 
-@ToString
-public class CreateListItemApiRequestBody {
-    public String id;
+import java.util.List;
+import java.util.Set;
+
+public class DefineListOrderRequestBody {
     public String containerId;
-    public String name;
     public String listId;
-    public String user;
-    public String username;
-    public String category;
-    public int quantity;
+    public List<GroceryListItem> items;
     public GroceryListRole scope;
 }

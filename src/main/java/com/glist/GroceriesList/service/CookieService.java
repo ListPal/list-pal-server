@@ -17,7 +17,6 @@ public class CookieService {
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(3600 * 23 * 20); // 23 hrs * 20 (almost 20 days_
         jwtCookie.setHttpOnly(true);
-        jwtCookie.setDomain(listPalConfig.getServerDomain());
 //        jwtCookie.setSecure(true);
         return jwtCookie;
     }
@@ -27,7 +26,6 @@ public class CookieService {
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(0);
         jwtCookie.setHttpOnly(true);
-        jwtCookie.setDomain(listPalConfig.getServerDomain());
 //        jwtCookie.setSecure(true);
         return jwtCookie;
     }

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.nio.file.AccessDeniedException;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -65,6 +66,7 @@ public class GroceryListRepo {
         } else if (!list.getScope().name().equals(scope)) {
             throw new AccessDeniedException("List scope doesn't match your authorization");
         } else {
+            log.info(newItem.toString());
             list.addItem(newItem);
             listDbRepository.save(list);
             return new Response(200, newItem);
@@ -81,6 +83,7 @@ public class GroceryListRepo {
         } else if (!list.getScope().name().equals(scope)) {
             throw new AccessDeniedException("List scope doesn't match your authorization");
         } else {
+            log.info(updatedItem.toString());
             list.deleteItemById(previousItemId); // O(1)
             list.addItem(updatedItem); // O(1)
             listDbRepository.save(list);
@@ -180,6 +183,18 @@ public class GroceryListRepo {
             log.error("Not container was found that matches id: " + containerId);
             return new Response(400, "Not container was found that matches id: " + containerId);
         }
+
+        // TODO: Remove for loop
+        for (int i = 0; i < container.getCollapsedLists().size(); i++) {
+            if (container.getCollapsedLists().get(i).getOrder() == null) {
+                log.info(String.valueOf(container.getCollapsedLists().get(i)));
+                container.getCollapsedLists().get(i).setOrder(i);
+            }
+        }
+        containerDbRepository.save(container);
+        // Sort lists by CollapsedList.order
+        container.getCollapsedLists().sort(Comparator.comparingInt(CollapsedList::getOrder));
+        log.info(container.getCollapsedLists().toString());
         return new Response(200, container);
     }
 
@@ -361,5 +376,32 @@ public class GroceryListRepo {
             listDbRepository.save(list);
             return new Response(200, list);
         }
+    }
+
+    public Response setNewListOrder(String containerId, String listId, List<GroceryListItem> items, GroceryListRole scope) throws AccessDeniedException {
+        // Get list
+        GroceryList list = listDbRepository.findListByIdExpanded(listId);
+        if (list == null) {
+            return new Response(400, "No list was found that matches id: " + listId);
+        } else if (!list.getContainerId().equals(containerId)) {
+            return new Response(401, "List doesn't belong to the provided container id: " + containerId);
+        } else if (!list.getScope().equals(scope)) {
+            throw new AccessDeniedException("List scope doesn't match your authorization");
+        } else {
+            list.resetItems();
+            list.setGroceryListItems(items);
+            listDbRepository.save(list);
+            return new Response(200, list);
+        }
+    }
+
+    public Response refactorCollapsedLists(String containerId, List<CollapsedList> collapsedLists) {
+        GroceryListContainer container = containerDbRepository.findContainerByIdCollapsed(containerId);
+        if (container == null) {
+            return new Response(400, "Could not find the container with id: " + containerId);
+        }
+        container.reorderCollapsedLists(collapsedLists);
+        containerDbRepository.save(container);
+        return new Response(200, "OK");
     }
 }

@@ -65,6 +65,8 @@ public class AuthenticationController {
     public ResponseEntity<Object> checkLoginStatus(@CookieValue("auth-jwt") String cookie, HttpServletResponse response) throws Exception {
         try {
             UserAuthenticationResponse res = authenticationService.checkAuthentication(cookie);
+            // Hide token from server response
+            res.setToken(null);
             return ResponseEntity.ok(res);
         } catch (ExpiredJwtException e) {
             Response res = new Response(403, "Access Denied");

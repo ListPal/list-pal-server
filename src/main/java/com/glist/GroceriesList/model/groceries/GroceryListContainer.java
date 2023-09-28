@@ -11,6 +11,7 @@ import java.util.ArrayList;
 
 
 @Data
+@Setter
 @Builder
 @ToString
 @EqualsAndHashCode
@@ -32,6 +33,10 @@ public class GroceryListContainer {
         }
     }
 
+    public void reorderCollapsedLists(List<CollapsedList> cl) {
+        this.collapsedLists.clear();
+        this.collapsedLists.addAll(cl);
+    }
     public void deleteCollapsedListById(String id) throws Exception {
         CollapsedList list = getCollapsedListById(id);
         if (list != null) {

@@ -1,5 +1,6 @@
 package com.glist.GroceriesList.service;
 
+import com.glist.GroceriesList.model.groceries.CollapsedList;
 import com.glist.GroceriesList.model.groceries.GroceryList;
 import com.glist.GroceriesList.model.groceries.GroceryListItem;
 import com.glist.GroceriesList.model.groceries.GroceryListRole;
@@ -77,5 +78,13 @@ public class GroceryListService {
 
     public Response resetList(String containerId, String listId, GroceryListRole scope) throws AccessDeniedException {
         return groceryListRepo.resetList(containerId, listId, scope);
+    }
+
+    public Response setNewListOrder(String containerId, String listId, List<GroceryListItem> items, GroceryListRole scope) throws AccessDeniedException {
+        return groceryListRepo.setNewListOrder(containerId, listId, items, scope);
+    }
+
+    public Response refactoreCollapsedLists(String containerId, List<CollapsedList> collapsedLists) {
+        return groceryListRepo.refactorCollapsedLists(containerId, collapsedLists);
     }
 }

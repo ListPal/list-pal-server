@@ -12,4 +12,5 @@ public class CollapsedList {
     private final String id;
     private GroceryListRole scope;
     private final String reference;
+    private Integer order;
 }

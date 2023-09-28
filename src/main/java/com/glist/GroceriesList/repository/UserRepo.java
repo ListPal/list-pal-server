@@ -58,19 +58,19 @@ public class UserRepo {
         // Create containers
         GroceryListContainer todo = GroceryListContainer.builder()
                 .id(new ObjectId().toHexString() + GroceryContainerType.TODO)
-                .collapsedLists(new ArrayList<CollapsedList>())
+                .collapsedLists(new ArrayList<>())
                 .username(user.getUsername())
                 .containerType(GroceryContainerType.TODO)
                 .build();
         GroceryListContainer wishlist = GroceryListContainer.builder()
                 .id(new ObjectId().toHexString() + GroceryContainerType.WISHLIST)
-                .collapsedLists(new ArrayList<CollapsedList>())
+                .collapsedLists(new ArrayList<>())
                 .username(user.getUsername())
                 .containerType(GroceryContainerType.WISHLIST)
                 .build();
         GroceryListContainer grocery = GroceryListContainer.builder()
                 .id(new ObjectId().toHexString() + GroceryContainerType.GROCERY)
-                .collapsedLists(new ArrayList<CollapsedList>())
+                .collapsedLists(new ArrayList<>())
                 .username(user.getUsername())
                 .containerType(GroceryContainerType.GROCERY)
                 .build();

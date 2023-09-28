@@ -33,13 +33,13 @@ public class GroceryList {
     private String listName;
     private LocalDateTime dateCreated;
     private Set<String> people;
-    private Set<GroceryListItem> groceryListItems;
+    private List<GroceryListItem> groceryListItems;
 
     public GroceryList(String listName, String containerId) {
-        this.id = containerId + listName.trim() + System.currentTimeMillis();
+        this.id = containerId + listName.trim().replaceAll("\\s+", "") + System.currentTimeMillis();
         this.containerId = containerId;
         this.listName = listName;
-        this.groceryListItems = new HashSet<>();
+        this.groceryListItems = new ArrayList<>();
         this.dateCreated = LocalDateTime.now();
         this.people = new HashSet<>();
     }
@@ -80,12 +80,20 @@ public class GroceryList {
     }
 
     public void updateAllChecked(Set<String> itemIds) { // O(n)
-        groceryListItems.forEach(item -> {
-            item.setChecked(itemIds.contains(item.getId()));
+        groceryListItems.forEach(item -> { // O(n)
+            // If was modified
+            if (itemIds.contains(item.getId())) { // Theta(1)
+                // Toggle checked state
+                item.setChecked(!item.isChecked()); // Theta(1)
+            }
         });
     }
 
     public void resetItems() {
         groceryListItems.clear();
+    }
+
+    public void reorderByPriority() {
+
     }
 }

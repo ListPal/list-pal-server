@@ -1,6 +1,5 @@
 package com.glist.GroceriesList.controller;
 
-import com.glist.GroceriesList.service.UserService;
 import com.glist.GroceriesList.utils.Utils;
 import com.glist.GroceriesList.model.groceries.GroceryListItem;
 import com.glist.GroceriesList.model.groceries.GroceryListRole;
@@ -25,7 +24,6 @@ public class PrivateController {
     private final GroceryListService groceryListService;
     private final JwtService jwtService;
     private final AuthenticationService authenticationService;
-    private final UserService userService;
 
     // GET ALL LIST
     @ResponseBody
@@ -114,6 +112,7 @@ public class PrivateController {
             Utils.validateInput(body.listId);
             Utils.validateInput(body.name);
             Utils.validateInput(body.quantity);
+            Utils.validateInput(body.category);
             Utils.validateInput(body.scope.name());
             // Ensure authorized subject for the requested asset
             authenticationService.ensureRestrictedSubject(authCookie, body.listId);
@@ -122,7 +121,7 @@ public class PrivateController {
             String username = jwtService.extractUsername(authCookie);
             CollapsedUser collapsedUser = new CollapsedUser(name, username, null);
             // Create item
-            GroceryListItem newItem = new GroceryListItem(body.listId, body.name, body.quantity, collapsedUser);
+            GroceryListItem newItem = new GroceryListItem(body.listId, body.name, body.category, body.quantity, collapsedUser);
             Response res = groceryListService.createGroceryListItem(body.containerId, newItem, body.scope.name());
             return ResponseEntity.ok(res);
         } catch (IllegalArgumentException e) {
@@ -160,7 +159,7 @@ public class PrivateController {
             // Create Collapsed user
             CollapsedUser collapsedUser = new CollapsedUser(body.user.getName().trim(), body.user.getUsername().trim(), null);
             // Create new item
-            GroceryListItem newItem = new GroceryListItem(body.listId, body.name.trim(), body.quantity, collapsedUser);
+            GroceryListItem newItem = new GroceryListItem(body.listId, body.name.trim(), body.category.trim(), body.quantity, collapsedUser);
             newItem.setCategory(body.category.trim());
             newItem.setChecked(body.checked);
             newItem.setPriority(body.priority);
@@ -282,6 +281,48 @@ public class PrivateController {
             return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    // REDEFINE LIST ORDER
+    @PostMapping(value = "/updated-list-order", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public ResponseEntity<Response> setNewListOrder(@RequestBody DefineListOrderRequestBody body, @CookieValue("auth-jwt") String authCookie) {
+        try {
+            Utils.validateInput(body.containerId);
+            Utils.validateInput(body.listId);
+            // Ensure authorized subject for the requested asset
+            authenticationService.ensureRestrictedSubject(authCookie, body.listId);
+            return ResponseEntity.ok(groceryListService.setNewListOrder(body.containerId, body.listId, body.items, body.scope));
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            Response res = new Response(400, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (AccessDeniedException e) {
+            log.error(e.getMessage());
+            Response res = new Response(401, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping(value = "/update-collapsed-list-order", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public ResponseEntity<Response> refactorCollapsedLists(@RequestBody ReorderCollapsedListsRequestBody body, @CookieValue("auth-jwt") String authCookie) {
+        try {
+            Utils.validateInput(body.containerId);
+            // Ensure authorized subject for the requested asset
+            return ResponseEntity.ok(groceryListService.refactoreCollapsedLists(body.containerId, body.collapsedLists));
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            Response res = new Response(400, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // DELETE PEOPLE FROM LIST
     @DeleteMapping("/remove-people-from-list")
     public ResponseEntity<Response> removePeopleFromList(@RequestBody AddPeopleApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
