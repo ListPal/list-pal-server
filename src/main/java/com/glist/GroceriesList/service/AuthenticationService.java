@@ -48,19 +48,7 @@ public class AuthenticationService {
         return userRepo.getUserInfoFromToken(token);
     }
 
-    //TODO: Needs implementing
-//    public Boolean refreshToken(String token) throws Exception {
-//        if (token == null) throw new AccessDeniedException("No token found.");
-//        Date expirationDate = jwtService.extractClaim(token, Claims::getExpiration);
-//        Instant instantToCheck = expirationDate.toInstant();
-//        Instant currentInstant = Instant.now();
-//        Duration duration = Duration.between(instantToCheck, currentInstant);
-//        // refresh if within 24hrs
-//        return duration.toHours() <= 24;
-//    }
-
     public Cookie logout(String token) {
-        // TODO: Expire token if token exists
         if (token != null) {
             log.debug(token);
         }

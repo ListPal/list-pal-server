@@ -431,4 +431,29 @@ public class PrivateController {
             return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @DeleteMapping("/delete-list-items")
+    public ResponseEntity<Response> resetListItems(@RequestBody CheckItemsApiRequestBody body, @CookieValue("auth-jwt") String authCookie) {
+        try {
+            // Validate input
+            Utils.validateInput(body.containerId);
+            Utils.validateInput(body.listId);
+            Utils.validateInput(body.scope.name());
+            // Ensure authorized subject for the requested asset
+            authenticationService.ensureRestrictedSubject(authCookie, body.listId);
+            return ResponseEntity.ok(groceryListService.removeListItems(body.containerId, body.listId, body.itemIds, body.scope));
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            Response res = new Response(400, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+        } catch (AccessDeniedException e) {
+            log.error(e.getMessage());
+            Response res = new Response(401, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Response res = new Response(500, e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

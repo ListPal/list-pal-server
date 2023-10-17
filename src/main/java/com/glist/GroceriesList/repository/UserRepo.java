@@ -1,6 +1,5 @@
 package com.glist.GroceriesList.repository;
 
-import com.glist.GroceriesList.model.groceries.CollapsedList;
 import com.glist.GroceriesList.model.groceries.GroceryContainerType;
 import com.glist.GroceriesList.model.groceries.GroceryList;
 import com.glist.GroceriesList.model.groceries.GroceryListContainer;
@@ -8,11 +7,10 @@ import com.glist.GroceriesList.model.request.AuthenticationRequest;
 import com.glist.GroceriesList.model.request.RegisterRequest;
 import com.glist.GroceriesList.model.response.Response;
 import com.glist.GroceriesList.model.response.UserAuthenticationResponse;
-import com.glist.GroceriesList.model.user.CollapsedUser;
-import com.glist.GroceriesList.model.user.Role;
-import com.glist.GroceriesList.model.user.User;
+import com.glist.GroceriesList.model.user.*;
 import com.glist.GroceriesList.service.JwtService;
 import com.mongodb.MongoWriteException;
+import io.jsonwebtoken.Claims;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,11 +20,14 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
 import java.nio.file.AccessDeniedException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
 @Repository
@@ -53,6 +54,7 @@ public class UserRepo {
                 .role(Role.USER_ROLE)
                 .phone(req.getPhone().trim())
                 .relevantUsers(new LinkedList<>())
+                .userPreferences(UserPreferences.builder().theme(ThemeType.lightTheme).build())
                 .build();
 
         // Create containers
@@ -108,6 +110,10 @@ public class UserRepo {
         if (user == null) {
             throw new AccessDeniedException("User Not Found");
         }
+        if (user.getUserPreferences() == null) {
+            user.setUserPreferences(UserPreferences.builder().theme(ThemeType.lightTheme).build());
+        }
+
         Map<String, Object> extraClaims = new LinkedHashMap<>();
         extraClaims.put("name", user.getName());
         extraClaims.put("lastName", user.getLastName());
@@ -121,16 +127,40 @@ public class UserRepo {
                 .build();
     }
 
+    //TODO: Needs implementing
+    public Boolean refreshToken(String token) throws Exception {
+        if (token == null) throw new AccessDeniedException("No token found.");
+        Date expirationDate = jwtService.extractClaim(token, Claims::getExpiration);
+        Instant instantToCheck = expirationDate.toInstant();
+        Instant currentInstant = Instant.now();
+        Duration duration = Duration.between(currentInstant, instantToCheck);
+        // refresh if within 10 days
+        return duration.toDays() <= 10;
+    }
 
     public UserAuthenticationResponse checkAuthentication(String token) throws Exception {
+        String jwtToken = token;
         User user = userDbRepository.findByUsername(jwtService.extractUsername(token));
         if (user == null) {
             throw new AccessDeniedException("User Not Found");
         }
+        if (user.getUserPreferences() == null) {
+            user.setUserPreferences(UserPreferences.builder().theme(ThemeType.lightTheme).build());
+        }
+        // Send a refresh token
+        if (refreshToken(jwtToken)) {
+            log.info("Attempting to refresh token");
+            Map<String, Object> extraClaims = new LinkedHashMap<>();
+            extraClaims.put("name", user.getName());
+            extraClaims.put("lastName", user.getLastName());
+            extraClaims.put("id", user.getId());
+            jwtToken = jwtService.generateToken(extraClaims, user);
+        }
+
         return UserAuthenticationResponse.builder()
                 .user(user)
                 .status(200)
-                .token(token)
+                .token(jwtToken)
                 .build();
     }
 
@@ -233,5 +263,74 @@ public class UserRepo {
         mongoTemplate.find(query, User.class).forEach(thisuser -> users.add(new CollapsedUser(thisuser.getName(), thisuser.getUsername(), thisuser.getLastName())));
         log.info("Done fetching suggested people..." + users);
         return new Response(200, users);
+    }
+
+    public Response updatePhone(String username, String phone) throws UsernameNotFoundException {
+        // Fetch user by username
+        User user = userDbRepository.findByUsername(username);
+        if (user == null) {
+            throw new UsernameNotFoundException("No user matches username: " + username);
+        }
+        user.setPhone(phone);
+        userDbRepository.save(user);
+        return new Response(200, user);
+
+    }
+
+    public Response updateName(String username, String name, String lastName) throws UsernameNotFoundException {
+        // Fetch user by username
+        User user = userDbRepository.findByUsername(username);
+        if (user == null) {
+            throw new UsernameNotFoundException("No user matches username: " + username);
+        }
+        user.setName(name);
+        user.setLastName(lastName);
+        userDbRepository.save(user);
+        return new Response(200, user);
+
+    }
+
+    public Response updatePassword(String username, String currentPassword, String newPassword) throws UsernameNotFoundException{
+        try {
+            // Fetch user by username
+            User user = userDbRepository.findByUsername(username);
+            if (user == null) {
+                throw new UsernameNotFoundException("No user matches username: " + username);
+            }
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, currentPassword));
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userDbRepository.save(user);
+            return new Response(200, user);
+        } catch (AuthenticationException e) {
+            return new Response(201, null);
+        }
+    }
+
+    public Response updateEmail(String username, String email) throws UsernameNotFoundException {
+        // Fetch user by username
+        User user = userDbRepository.findByUsername(username);
+        if (user == null) {
+            throw new UsernameNotFoundException("No user matches username: " + username);
+        }
+        user.setEmail(email);
+        userDbRepository.save(user);
+        return new Response(200, user);
+    }
+
+    public Response updateUserPreferences(String username, ThemeType theme) {
+        // Fetch user by username
+        User user = userDbRepository.findByUsername(username);
+        if (user == null) {
+            throw new UsernameNotFoundException("No user matches username: " + username);
+        }
+
+        if (user.getUserPreferences() == null) {
+            user.setUserPreferences(UserPreferences.builder().theme(theme).build());
+        }
+        else {
+            user.getUserPreferences().setTheme(theme);
+        }
+        userDbRepository.save(user);
+        return new Response(200, user.getUserPreferences());
     }
 }

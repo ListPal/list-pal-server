@@ -7,13 +7,10 @@ import com.glist.GroceriesList.utils.Utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.nio.file.AccessDeniedException;
 import java.util.Comparator;
@@ -403,5 +400,21 @@ public class GroceryListRepo {
         container.reorderCollapsedLists(collapsedLists);
         containerDbRepository.save(container);
         return new Response(200, "OK");
+    }
+
+    public Response removeListItems(String containerId, String listId, Set<String> itemIds, GroceryListRole scope) throws AccessDeniedException {
+        // Get list
+        GroceryList list = listDbRepository.findListByIdExpanded(listId);
+        if (list == null) {
+            return new Response(400, "No list was found that matches id: " + listId);
+        } else if (!list.getContainerId().equals(containerId)) {
+            return new Response(401, "List doesn't belong to the provided container id: " + containerId);
+        } else if (!list.getScope().equals(scope)) {
+            throw new AccessDeniedException("List scope doesn't match your authorization");
+        } else {
+            list.removeItems(itemIds);
+            listDbRepository.save(list);
+            return new Response(200, list);
+        }
     }
 }

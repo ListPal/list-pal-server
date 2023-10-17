@@ -93,7 +93,15 @@ public class GroceryList {
         groceryListItems.clear();
     }
 
+    public void resetCheckedItems() {
+        groceryListItems.removeIf(GroceryListItem::isChecked);
+    }
+
     public void reorderByPriority() {
 
+    }
+
+    public void removeItems(Set<String> itemIds) {
+        groceryListItems.removeIf(item -> itemIds.contains(item.getId()));
     }
 }

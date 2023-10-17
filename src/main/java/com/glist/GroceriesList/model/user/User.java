@@ -24,7 +24,6 @@ public class User implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     private Role role;
-
     private String name;
     private String lastName;
     private String email;
@@ -34,6 +33,7 @@ public class User implements UserDetails {
     private String wishlistContainerId;
     private String groceryContainerId;
     private LinkedList<String> relevantUsers;
+    private UserPreferences userPreferences;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

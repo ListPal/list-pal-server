@@ -1,11 +1,11 @@
 package com.glist.GroceriesList.controller;
 
-import com.glist.GroceriesList.model.request.AuthenticationRequest;
-import com.glist.GroceriesList.model.request.RegisterRequest;
+import com.glist.GroceriesList.model.request.*;
 import com.glist.GroceriesList.model.response.Response;
 import com.glist.GroceriesList.model.response.UserAuthenticationResponse;
 import com.glist.GroceriesList.service.AuthenticationService;
 import com.glist.GroceriesList.service.CookieService;
+import com.glist.GroceriesList.utils.Utils;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -65,6 +65,13 @@ public class AuthenticationController {
     public ResponseEntity<Object> checkLoginStatus(@CookieValue("auth-jwt") String cookie, HttpServletResponse response) throws Exception {
         try {
             UserAuthenticationResponse res = authenticationService.checkAuthentication(cookie);
+
+            // Send refresh token if necessary
+            if (!cookie.equals(res.getToken())) {
+                Cookie jwtCookie = cookieService.makeAuthCookie(res.getToken());
+                response.addCookie(jwtCookie);
+            }
+
             // Hide token from server response
             res.setToken(null);
             return ResponseEntity.ok(res);
@@ -88,7 +95,8 @@ public class AuthenticationController {
 //    }
 //
 //    @PostMapping("/password-reset")
-//    public ResponseEntity<String> resetPassword(@RequestBody String token, @RequestBody String password) {
-//        return ResponseEntity.ok("Password successfully changed.");
+//    public ResponseEntity<String> resetPassword() {
+//
+//        return ResponseEntity.ok(authenticationService.changePword());
 //    }
 }
